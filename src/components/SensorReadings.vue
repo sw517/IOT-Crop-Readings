@@ -34,6 +34,10 @@ export default {
       return this.$myStore.state.devices;
     },
   },
+  created() {
+    /* eslint no-console: 0 */
+    console.log(this.$myStore.state);
+  },
 };
 </script>
 

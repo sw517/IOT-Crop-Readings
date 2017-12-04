@@ -6,7 +6,7 @@
       :width="400"
       :height="200"
       :chart-data="currentData"
-      :options="{maintainAspectRatio: false}"
+      :options="{ maintainAspectRatio: false }"
     />
 
   </div>
