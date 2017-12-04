@@ -1,18 +1,17 @@
 <template>
   <div id="wrapper">
-    <router-link :to="{name: 'SensorDetails', params: {sensor: 'gh2_co2Production_gas', sample_rate: 'minute', values:'gas_values'}}">This is a test</router-link>
-    <div v-for="device of devices">
-      {{device}}
-    </div>
+        <el-row :gutter="20">
+            <el-col v-for="device of devices" :span="6"><div class="grid-content bg-purple">{{device}}</div></el-col>
+        </el-row>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'SensorReadings',
+  name: 'SiteDetails',
   data () {
     return {
-      msg: 'This is the Sensor Readings page'
+      msg: 'This is the SiteDetails page'
     }
   },
   computed: {

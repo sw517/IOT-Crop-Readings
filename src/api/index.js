@@ -13,7 +13,7 @@ const API = {
     requestDevices(){
         const querystring = 'devices';
         return this.request(querystring);
-    },    
+    },
     requestDevice(params){
         let querystring = 'device';
         querystring += this.formatParams(params);

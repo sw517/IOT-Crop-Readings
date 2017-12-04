@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <h2>Device Info</h2>
+    <h1>Device Details</h1>
+    <h2>Data from the {{$route.params.sensor}} sensor</h2>
     <LineChart
       :width="400"
       :height="200"
@@ -24,16 +24,17 @@ export default {
     return {
       readings: {},
       lineData: {},
-      msg: 'This is the Sensor Details page'
+      msg: ''
     }
   },
   created() {
+    console.log(this.$route);
     API.requestDevice({
-      device_id:'gh2_co2Production_gas',
-      sample_rate:'minute'
+      device_id: this.$route.params.sensor,
+      sample_rate: (this.$route.params.sample_rate || 'minute')
     })
       .then ((response) => {
-        response.data['gas_values'].length = 20;
+        response.data[this.$route.params.values].length = 20;
         this.readings = response.data;
         this.lineData = this.formatData();
       })
@@ -50,7 +51,7 @@ export default {
         ],
       };
       console.log(this.readings);
-      this.readings['gas_values'].forEach(([time, reading]) => {
+      this.readings[this.$route.params.values].forEach(([time, reading]) => {
         object.labels.push(time);
         object.datasets[0].data.push(reading || 0);
       });
