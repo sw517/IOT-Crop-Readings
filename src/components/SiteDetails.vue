@@ -1,25 +1,34 @@
 <template>
   <div id="wrapper">
-        <el-row :gutter="20">
-            <el-col v-for="device of devices" :span="6"><div class="grid-content bg-purple">{{device}}</div></el-col>
-        </el-row>
+    <el-row :gutter="20">
+      <el-col
+        v-for="device of devices"
+        :key="device"
+        :span="6"
+      >
+        <div class="grid-content bg-purple">
+          {{msg}}
+          {{device}}
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script>
 export default {
   name: 'SiteDetails',
-  data () {
+  data() {
     return {
-      msg: 'This is the SiteDetails page'
-    }
+      msg: 'This is the SiteDetails page',
+    };
   },
   computed: {
     devices() {
       return this.$myStore.state.devices;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -15,29 +15,29 @@
 <script>
 import API from '../api';
 import LineChart from './LineChart';
+
 export default {
   name: 'SensorDetails',
   components: {
     LineChart,
   },
-  data () {
+  data() {
     return {
       readings: {},
       lineData: {},
-      msg: ''
-    }
+      msg: '',
+    };
   },
   created() {
-    console.log(this.$route);
     API.requestDevice({
       device_id: this.$route.params.sensor,
-      sample_rate: (this.$route.params.sample_rate || 'minute')
+      sample_rate: (this.$route.params.sample_rate || 'minute'),
     })
-      .then ((response) => {
+      .then((response) => {
         response.data[this.$route.params.values].length = 20;
         this.readings = response.data;
         this.lineData = this.formatData();
-      })
+      });
   },
   methods: {
     formatData() {
@@ -47,21 +47,22 @@ export default {
           {
             label: 'Reading (ppm)',
             data: [],
-          }
+          },
         ],
       };
-      console.log(this.readings);
       this.readings[this.$route.params.values].forEach(([time, reading]) => {
         object.labels.push(time);
         object.datasets[0].data.push(reading || 0);
       });
       return object;
-    }
+    },
   },
   computed: {
-    currentData(){return this.lineData;}
-  }
-}
+    currentData() {
+      return this.lineData;
+    },
+  },
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

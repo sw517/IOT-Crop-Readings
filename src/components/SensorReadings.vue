@@ -1,7 +1,21 @@
 <template>
   <div id="wrapper">
-    <router-link :to="{name: 'SensorDetails', params: {sensor: 'gh2_co2Production_gas', sample_rate: 'minute', values:'gas_values'}}">This is a test</router-link>
-    <div v-for="device of devices">
+    <router-link
+      :to="{
+        name: 'SensorDetails',
+        params: {
+          sensor: 'gh2_co2Production_gas',
+          sample_rate: 'minute',
+          values:'gas_values'
+        }
+      }"
+    >
+      This is a test
+    </router-link>
+    <div
+      v-for="device of devices"
+      :key="device"
+    >
       {{device}}
     </div>
   </div>
@@ -10,17 +24,17 @@
 <script>
 export default {
   name: 'SensorReadings',
-  data () {
+  data() {
     return {
-      msg: 'This is the Sensor Readings page'
-    }
+      msg: 'This is the Sensor Readings page',
+    };
   },
   computed: {
     devices() {
       return this.$myStore.state.devices;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
