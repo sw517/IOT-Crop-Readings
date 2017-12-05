@@ -3,17 +3,89 @@
     <h1>Device Listing</h1>
     <h2>Show list of sensors here</h2>
     <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div>
+    <div
+      v-if="dataLoaded"
+      v-for="sensor in sensors"
+    >
+      <LineChart
+        :key="sensor.key"
+        :name="sensor.name"
+        :width="400"
+        :height="200"
+        :chart-data="sensor"
+        :options="{ maintainAspectRatio: false }"
+      />
+    </div>
+
   </div>
 </template>
 
 <script>
+import API from '../api';
+import LineChart from './LineChart';
 
 export default {
   name: 'SensorListing',
+  components: {
+    LineChart,
+  },
   data() {
     return {
-      test: [],
+      dataLoaded: false,
+      sampleRate: 'minute',
+      sensors: [],
     };
+  },
+  methods: {
+    getDevices() {
+      this.dataLoaded = false;
+      this.sensors = [];
+      const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
+      const sensors = this.$myStore.state.zones[locationString];
+      // eslint-disable-next-line
+      for (const sensor of sensors) {
+        API.requestDevice({
+          device_id: sensor.name,
+          sample_rate: this.sampleRate,
+        })
+          .then((response) => {
+            this.formatData({ data: response.data, type: sensor.type });
+          });
+      }
+      this.dataLoaded = true;
+    },
+    formatData(data) {
+      const unitKey = this.$myStore.state.dataTypes[data.type].unit;
+      const object = {
+        key: data.data.id,
+        name: data.data.name,
+        labels: [],
+        datasets: [
+          {
+            label: data.data[unitKey] || 'Reading',
+            data: [],
+          },
+        ],
+      };
+      const { values } = this.$myStore.state.dataTypes[data.type];
+      data.data[values].length = 20;
+      data.data[values].forEach(([time, reading]) => {
+        object.labels.push(time);
+        object.datasets[0].data.push(reading || 0);
+      });
+
+      this.sensors.push(object);
+    },
+  },
+  watch: {
+    $route() {
+      this.getDevices()
+        .then(this.formatData);
+    },
+  },
+  created() {
+    this.getDevices()
+      .then(this.formatData);
   },
 };
 </script>

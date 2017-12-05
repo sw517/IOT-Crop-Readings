@@ -13,12 +13,6 @@
     >
       This is a test
     </router-link>
-    <div
-      v-for="device of devices"
-      :key="device"
-    >
-      {{device}}
-    </div>
   </div>
 </template>
 

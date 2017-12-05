@@ -8,7 +8,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     sites: [],
-    devices: [],
+    sensors: [],
     zones: {},
     // Define our data types so that we
     // can grab data from each object
@@ -20,7 +20,7 @@ export default new Vuex.Store({
         values: 'gas_values',
       },
       hydrometer: {
-        unit: null,
+        unit: 'name',
         values: 'moisture_value',
       },
       lumosity: {
@@ -42,13 +42,13 @@ export default new Vuex.Store({
     FETCH_SITES(state, sites) {
       state.sites = sites;
     },
-    // Set sites property to our fetched data.
-    FETCH_DEVICES(state, devices) {
-      state.devices = devices;
-    },
     // Set zones property to our fetched data.
     FETCH_ZONES(state, zones) {
       state.zones = zones;
+    },
+    // Set sites property to our fetched data.
+    FETCH_SENSORS(state, sensors) {
+      state.sensors = sensors;
     },
   },
   actions: {
@@ -73,21 +73,21 @@ export default new Vuex.Store({
           console.log(error.statusText);
         }));
     },
-    fetchDevices({ commit }) {
+    fetchSensors({ commit }) {
       // Check if devices are in storage first.
       // If it exists, grab that rather than
       // making a new API request.
-      const inStorage = storage.get('devices');
+      const inStorage = storage.get('sensors');
       if (inStorage) {
-        commit('FETCH_DEVICES', inStorage);
+        commit('FETCH_SENSORS', inStorage);
         return;
       }
       // Make request and run mutation that
       // adds our data to the store
       API.requestDevices()
         .then((response) => {
-          commit('FETCH_DEVICES', response.data);
-          storage.set('devices', response.data);
+          commit('FETCH_SENSORS', response.data);
+          storage.set('sensors', response.data);
         })
         .catch(((error) => {
           /* eslint no-console: 0 */
@@ -103,22 +103,27 @@ export default new Vuex.Store({
         commit('FETCH_ZONES', inStorage);
         return;
       }
-      const sensors = {};
-      this.state.devices.forEach((type) => {
-        type.sensorTypes.forEach((sensor) => {
-          sensors[sensor] = [];
+
+      const sensors = [];
+      Object.keys(this.state.sensors).forEach((type) => {
+        this.state.sensors[type].forEach((sensor) => {
+          sensors.push({
+            name: sensor,
+            type,
+          });
         });
       });
+
       const locations = {};
       this.state.sites.forEach((site) => {
         const prefix = `${site.id}_`;
         site.zones.forEach((zone) => {
-          locations[prefix + zone.id] = [];
-          sensors.sensorNames.forEach((sensor) => {
-            if (sensor.includes(prefix + zone.id)) {
-              locations[prefix + zone.id] += sensor;
-            }
-          });
+          const locationID = prefix + zone.id;
+          const reduced = sensors.reduce((accumulator, sensor) => {
+            if (!sensor.name.includes(locationID)) return accumulator;
+            return accumulator.concat(sensor);
+          }, []);
+          locations[locationID] = reduced;
         });
         commit('FETCH_ZONES', locations);
       });
