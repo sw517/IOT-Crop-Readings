@@ -8,6 +8,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     sites: [],
+    devices: [],
     // Define our data types so that we
     // can grab data from each object
     // without having to worry about the
@@ -40,6 +41,10 @@ export default new Vuex.Store({
     FETCH_SITES(state, sites) {
       state.sites = sites;
     },
+    // Set sites property to our fetched data.
+    FETCH_DEVICES(state, devices) {
+      state.devices = devices;
+    },
   },
   actions: {
     fetchSites({ commit }) {
@@ -57,6 +62,27 @@ export default new Vuex.Store({
         .then((response) => {
           commit('FETCH_SITES', response.data);
           storage.set('sites', response.data);
+        })
+        .catch(((error) => {
+          /* eslint no-console: 0 */
+          console.log(error.statusText);
+        }));
+    },
+    fetchDevices({ commit }) {
+      // Check if devices are in storage first.
+      // If it exists, grab that rather than
+      // making a new API request.
+      const inStorage = storage.get('devices');
+      if (inStorage) {
+        commit('FETCH_DEVICES', inStorage);
+        return;
+      }
+      // Make request and run mutation that
+      // adds our data to the store
+      API.requestDevices()
+        .then((response) => {
+          commit('FETCH_DEVICES', response.data);
+          storage.set('devices', response.data);
         })
         .catch(((error) => {
           /* eslint no-console: 0 */

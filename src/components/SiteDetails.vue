@@ -1,31 +1,66 @@
 <template>
-  <div id="wrapper">
-    <el-row :gutter="20">
-      <el-col
-        v-for="device of devices"
-        :key="device"
-        :span="6"
-      >
-        <div class="grid-content bg-purple">
-          {{msg}}
-          {{device}}
-        </div>
-      </el-col>
-    </el-row>
+  <div class="hello">
+    <h1>Device Details</h1>
+    <h2>Data from the sensors</h2>
+    <LineChart
+      :width="400"
+      :height="200"
+      :chart-data="currentData"
+      :options="{ maintainAspectRatio: false }"
+    />
   </div>
 </template>
 
 <script>
+import API from '../api';
+import LineChart from './LineChart';
+
 export default {
   name: 'SiteDetails',
+  components: {
+    LineChart,
+  },
   data() {
     return {
-      msg: 'This is the SiteDetails page',
+      readings: {},
+      lineData: {},
+      msg: '',
     };
   },
+  created() {
+    API.requestDevice({
+      device_id: this.$route.params.sensor,
+      sample_rate: (this.$route.params.sample_rate || 'minute'),
+    })
+      .then((response) => {
+        const $values = 'gas_values';
+        response.data[$values].length = 20;
+        this.readings = response.data;
+        this.lineData = this.formatData();
+      });
+  },
+  methods: {
+    formatData() {
+      const object = {
+        labels: [],
+        datasets: [
+          {
+            label: 'Reading (ppm)',
+            data: [],
+          },
+        ],
+      };
+      const $values = 'gas_values';
+      this.readings[$values].forEach(([time, reading]) => {
+        object.labels.push(time);
+        object.datasets[0].data.push(reading || 0);
+      });
+      return object;
+    },
+  },
   computed: {
-    devices() {
-      return this.$myStore.state.devices;
+    currentData() {
+      return this.lineData;
     },
   },
 };

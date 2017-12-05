@@ -34,6 +34,22 @@ export default {
       sample_rate: (this.$route.params.sample_rate || 'minute'),
     })
       .then((response) => {
+        // Iterate through the dataTypes from store.js.
+        // Then iterate through the sites from store.js.
+        // Compare the ID of the current site with the site_id
+        // from the requested device.
+        // If the ID of the site is the same as the device's site_id,
+        // then set the $values variable as the dataType's values from Store.js.
+
+        // for (dataType in this.$myStore.state.dataTypes) {
+        //   for (site in this.$myStore.state.sites) {
+        //     if (site.id == device_id.site_id) {
+        //       /* eslint no-console: 0 */
+        //       console.log(dataType);
+        //       const $values = dataType.values;
+        //     }
+        //   }
+        // }
         const $values = 'gas_values';
         response.data[$values].length = 20;
         this.readings = response.data;
