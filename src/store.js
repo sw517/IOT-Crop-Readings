@@ -18,22 +18,27 @@ export default new Vuex.Store({
       gas: {
         unit: 'gas_scale',
         values: 'gas_values',
+        sampleRate: 'minute',
       },
       hydrometer: {
         unit: 'moisture_scale',
         values: 'moisture_value',
+        sampleRate: 'hour',
       },
       lumosity: {
         unit: 'light_scale',
         values: 'light_value',
+        sampleRate: '10minute',
       },
       solar: {
         unit: 'solar_scale',
         values: 'solar_value',
+        sampleRate: '10minute',
       },
       tempHumid: {
         unit: 'temp_scale',
         values: 'humidity_value',
+        sampleRate: '10minute',
       },
     },
   },

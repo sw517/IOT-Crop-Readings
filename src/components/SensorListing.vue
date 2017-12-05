@@ -36,7 +36,7 @@ export default {
   data() {
     return {
       dataLoaded: false,
-      sampleRate: 'minute',
+      sampleRate: 'hour',
       sensors: [],
     };
   },
@@ -74,13 +74,30 @@ export default {
         ],
       };
       const { values } = this.$myStore.state.dataTypes[data.type];
-      data.data[values].length = 20;
+      data.data[values].length = 14;
       data.data[values].forEach(([time, reading]) => {
+        console.log(time);
         object.labels.push(time);
         object.datasets[0].data.push(reading || 0);
       });
-
       this.sensors.push(object);
+    },
+    createDate(dateString) {
+      var d = new Date();
+      const dateTimeArray = dateString.split('T');
+      const dateStr = dateTimeArray[0];
+      const timeStr = dateTimeArray[1];
+      const dateArray = dateStr.split('-');
+      const timeArray = timeStr.split(':');
+    
+      //set Date() var
+      d.setFullYear(dateArray[0]);
+      d.setMonth((dateArray[1] - 1));
+      d.setDate(dateArray[2]);
+      d.setHours(timeArray[0]);
+      d.setMinutes(timeArray[1]);
+      // console.log(d);
+      return d;
     },
   },
   watch: {
