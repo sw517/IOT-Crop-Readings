@@ -5,7 +5,7 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <div class="grid-content">
-              <h5>Internet of Things: Assignment 3</h5>
+              <h3>Greenhouse Sensors</h3>
             </div>
           </el-col>
           <el-col :span="6">
@@ -15,7 +15,9 @@
             <div class="grid-content"></div>
           </el-col>
           <el-col :span="6">
-            <div class="grid-content"></div>
+            <div class="grid-content">
+              <h5>Internet of Things: Assignment 3</h5>
+            </div>
           </el-col>
         </el-row>
       </el-header>
@@ -47,7 +49,7 @@
                 >
                   Overview
                 </el-menu-item>
-                <el-menu-item-group title="Specific locations">
+                <el-menu-item-group title="Sensor Listings">
                   <el-menu-item
                     v-for="location in site.zones"
                     :index="'/' + site.id + '/' + location.id"
@@ -116,6 +118,14 @@ export default {
   &:last-child {
     margin-bottom: 0;
   } */
+}
+
+.graph-col {
+  margin-top: 30px;
+}
+
+.graph-col .grid-content {
+  box-shadow: 0 0 11px 3px #ccc;
 }
 
 .el-col {

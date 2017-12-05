@@ -63,6 +63,7 @@ export default {
         datasets: [
           {
             label: 'Reading (ppm)',
+            backgroundColor: '#333',
             data: [],
           },
         ],

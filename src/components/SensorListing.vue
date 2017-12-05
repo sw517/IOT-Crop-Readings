@@ -2,21 +2,25 @@
   <div class="hello">
     <h1>Device Listing</h1>
     <h2>Show list of sensors here</h2>
-    <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div>
-    <div
-      v-if="dataLoaded"
-      v-for="sensor in sensors"
-    >
-      <LineChart
-        :key="sensor.key"
-        :name="sensor.name"
-        :width="400"
-        :height="200"
-        :chart-data="sensor"
-        :options="{ maintainAspectRatio: false }"
-      />
-    </div>
-
+    <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
+    <el-row :gutter="20">
+      <el-col class="graph-col" :span="12"
+        v-if="dataLoaded"
+        v-for="sensor in sensors"
+      >
+        <div class="grid-content">
+          <h3 style="padding-top: 20px">{{sensor.name}}</h3>
+          <LineChart
+            :key="sensor.key"
+            :name="sensor.name"
+            :width="500"
+            :height="400"
+            :chart-data="sensor"
+            :options="{ maintainAspectRatio: false }"
+          />
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -62,6 +66,7 @@ export default {
         labels: [],
         datasets: [
           {
+            backgroundColor: '#fc7976',
             label: data.data[unitKey] || 'Reading',
             data: [],
           },
