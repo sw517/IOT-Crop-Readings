@@ -42,7 +42,9 @@
                   <i class="el-icon-location"></i>
                   <span>{{site.name}}</span>
                 </template>
-                <el-menu-item :index="site.id">
+                <el-menu-item
+                  :index="site.id + '/overview'"
+                >
                   Overview
                 </el-menu-item>
                 <el-menu-item-group title="Specific locations">

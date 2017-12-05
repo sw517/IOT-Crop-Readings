@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import SensorReadings from '@/components/SensorReadings';
 import SensorDetails from '@/components/SensorDetails';
 import SiteDetails from '@/components/SiteDetails';
+import SiteOverview from '@/components/SiteOverview';
 
 Vue.use(Router);
 
@@ -19,7 +20,12 @@ export default new Router({
       component: SiteDetails,
     },
     {
-      path: '/device/:sensor',
+      path: '/:site/overview',
+      name: 'SiteOverview',
+      component: SiteOverview,
+    },
+    {
+      path: '/:site/:sensor',
       name: 'SensorDetails',
       component: SensorDetails,
     },
