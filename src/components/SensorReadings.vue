@@ -4,6 +4,8 @@
       :to="{
         name: 'SensorDetails',
         params: {
+          site: 'gh2',
+          location: 'co2Production',
           sensor: 'gh2_co2Production_gas',
           sample_rate: 'minute'
         }
