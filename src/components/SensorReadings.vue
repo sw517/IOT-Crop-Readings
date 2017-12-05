@@ -5,8 +5,7 @@
         name: 'SensorDetails',
         params: {
           sensor: 'gh2_co2Production_gas',
-          sample_rate: 'minute',
-          values:'gas_values'
+          sample_rate: 'minute'
         }
       }"
     >

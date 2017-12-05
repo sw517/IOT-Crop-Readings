@@ -34,7 +34,8 @@ export default {
       sample_rate: (this.$route.params.sample_rate || 'minute'),
     })
       .then((response) => {
-        response.data[this.$route.params.values].length = 20;
+        const $values = 'gas_values';
+        response.data[$values].length = 20;
         this.readings = response.data;
         this.lineData = this.formatData();
       });
@@ -50,7 +51,8 @@ export default {
           },
         ],
       };
-      this.readings[this.$route.params.values].forEach(([time, reading]) => {
+      const $values = 'gas_values';
+      this.readings[$values].forEach(([time, reading]) => {
         object.labels.push(time);
         object.datasets[0].data.push(reading || 0);
       });

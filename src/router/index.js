@@ -25,7 +25,7 @@ export default new Router({
       component: SiteOverview,
     },
     {
-      path: '/:site/:sensor',
+      path: '/sensor/:sensor',
       name: 'SensorDetails',
       component: SensorDetails,
     },

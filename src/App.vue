@@ -43,14 +43,14 @@
                   <span>{{site.name}}</span>
                 </template>
                 <el-menu-item
-                  :index="site.id + '/overview'"
+                  :index="'/' + site.id + '/overview'"
                 >
                   Overview
                 </el-menu-item>
                 <el-menu-item-group title="Specific locations">
                   <el-menu-item
                     v-for="location in site.zones"
-                    :index="site.id + '/' + location.id"
+                    :index="'/' + site.id + '/' + location.id"
                     :key="location.id"
                   >
                     {{location.name}}
@@ -77,8 +77,8 @@ export default {
   computed: {
     sites() {
       return this.$myStore.state.sites;
-    }
-  }
+    },
+  },
 };
 </script>
 
