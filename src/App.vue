@@ -73,6 +73,8 @@ export default {
   name: 'app',
   beforeCreate() {
     this.$myStore.dispatch('fetchSites');
+    this.$myStore.dispatch('fetchDevices');
+    this.$myStore.dispatch('groupData');
   },
   computed: {
     sites() {
