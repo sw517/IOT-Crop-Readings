@@ -69,14 +69,14 @@
 <script>
 export default {
   name: 'app',
-  data() {
-    return {
-      sites: [],
-    };
-  },
   beforeCreate() {
     this.$myStore.dispatch('fetchSites');
   },
+  computed: {
+    sites() {
+      return this.$myStore.state.sites;
+    }
+  }
 };
 </script>
 
