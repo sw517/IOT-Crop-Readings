@@ -126,6 +126,7 @@ export default {
 
 .graph-col .grid-content {
   box-shadow: 0 0 11px 3px #ccc;
+  padding: 15px;
 }
 
 .el-col {

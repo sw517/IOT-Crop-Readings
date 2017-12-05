@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
     <h1>Device Listing</h1>
-    <h2>Show list of sensors here</h2>
+    <h2>{{this.$route.params.location}}</h2>
     <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
       <el-col class="graph-col" :span="12"
@@ -9,7 +9,7 @@
         v-for="sensor in sensors"
       >
         <div class="grid-content">
-          <h3 style="padding-top: 20px">{{sensor.name}}</h3>
+          <h3>{{sensor.name}}</h3>
           <LineChart
             :key="sensor.key"
             :name="sensor.name"
@@ -60,6 +60,7 @@ export default {
     },
     formatData(data) {
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
+
       const object = {
         key: data.data.id,
         name: data.data.name,
