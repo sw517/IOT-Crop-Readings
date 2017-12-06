@@ -15,7 +15,6 @@
     >
       This is a test
     </router-link>
-    <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
       <el-col class="graph-col" :span="12"
         v-for="site in this.$myStore.state.sites"
@@ -46,17 +45,31 @@ export default {
   methods: {
     getDevices() {
       this.dataLoaded = false;
-      this.sensors = [];
-      const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
-      const sensors = this.$myStore.state.zones[locationString];
-      return new Promise((resolve) => {
+      const Mysensors = [];
+      Object.keys(this.$myStore.state.sensors).forEach((type) => {
+        console.log('type: ' + type);
+        this.$myStore.state.sensors[type];
+        console.log('array: '+ this.$myStore.state.sensors[type]);
+        this.$myStore.state.sensors[type].forEach((sens) => {
+          console.log('sens: '+ sens);
+        });
+      });
+      console.log('sensors: ' + Mysensors);
+      return new Promise((resolve, reject) => {
         // eslint-disable-next-line
-        for (const sensor of sensors) {
+        for (const sensor of Mysensors) {
           const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
           API.requestDevice({
             device_id: sensor.name,
             sample_rate: currentSampleRate,
-          });
+          })
+            .then((response) => {
+              this.formatData({ data: response.data, type: sensor.type });
+            })
+            .catch((e) => {
+              this.errors.push(e);
+              reject();
+            });
         }
         this.dataLoaded = true;
         resolve();

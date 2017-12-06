@@ -50,7 +50,7 @@ export default {
       this.sensors = [];
       const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
       const sensors = this.$myStore.state.zones[locationString];
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         // eslint-disable-next-line
         for (const sensor of sensors) {
           const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
@@ -60,6 +60,10 @@ export default {
           })
             .then((response) => {
               this.formatData({ data: response.data, type: sensor.type });
+            })
+            .catch((e) => {
+              this.errors.push(e);
+              reject();
             });
         }
         this.dataLoaded = true;
@@ -67,8 +71,17 @@ export default {
       });
     },
     formatData(data) {
+      if (!data) return;
+      // eslint-disable-next-line
+      console.log('Data: ' + data);
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
       const graphColor = this.$myStore.state.dataTypes[data.type].graphColor;
+      // eslint-disable-next-line
+      console.log('Unit Key: ' + unitKey);
+      // eslint-disable-next-line
+      console.log('Data Type: ' + data.type);
+      // eslint-disable-next-line
+      console.log('graphColor: ' + graphColor);
       const object = {
         key: data.data.id,
         name: data.data.name,
@@ -84,7 +97,8 @@ export default {
       const { values } = this.$myStore.state.dataTypes[data.type];
       data.data[values].length = 14;
       data.data[values].forEach(([time, reading]) => {
-        object.labels.push(time);
+        const newTime = this.createDate(time);
+        object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
@@ -96,13 +110,13 @@ export default {
       const timeStr = dateTimeArray[1];
       const dateArray = dateStr.split('-');
       const timeArray = timeStr.split(':');
-      //set Date() var
+      // set Date() var
       d.setFullYear(dateArray[0]);
       d.setMonth((dateArray[1] - 1));
       d.setDate(dateArray[2]);
       d.setHours(timeArray[0]);
       d.setMinutes(timeArray[1]);
-      return d;
+      return d.toString();
     },
   },
   watch: {
