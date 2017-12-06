@@ -1,6 +1,8 @@
 <template>
-  <div id="wrapper">
-    <router-link
+  <div class="hello">
+    <h1>Garden Status</h1>
+    <h2>{{this.$route.params.location}}</h2>
+      <router-link
       :to="{
         name: 'SensorDetails',
         params: {
@@ -13,25 +15,61 @@
     >
       This is a test
     </router-link>
+    <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
+    <el-row :gutter="20">
+      <el-col class="graph-col" :span="12"
+        v-for="site in this.$myStore.state.sites"
+        :key="site.key"
+      >
+        <div class="grid-content grid-status">
+          {{site.name}}
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script>
+import API from '../api';
+
 export default {
-  name: 'SensorReadings',
+  name: 'SensorListing',
+  components: {
+  },
   data() {
     return {
-      msg: 'This is the Sensor Readings page',
+      dataLoaded: false,
+      sampleRate: '10minute',
+      sensors: [],
     };
   },
-  computed: {
-    devices() {
-      return this.$myStore.state.devices;
+  methods: {
+    getDevices() {
+      this.dataLoaded = false;
+      this.sensors = [];
+      const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
+      const sensors = this.$myStore.state.zones[locationString];
+      return new Promise((resolve) => {
+        // eslint-disable-next-line
+        for (const sensor of sensors) {
+          const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
+          API.requestDevice({
+            device_id: sensor.name,
+            sample_rate: currentSampleRate,
+          });
+        }
+        this.dataLoaded = true;
+        resolve();
+      });
+    },
+  },
+  watch: {
+    $route() {
+      this.getDevices();
     },
   },
   created() {
-    /* eslint no-console: 0 */
-    console.log(this.$myStore.state);
+    this.getDevices();
   },
 };
 </script>
@@ -51,5 +89,13 @@ li {
 }
 a {
   color: #42b983;
+}
+.grid-status {
+  background: #1e931e;
+  color: #fff;
+  box-shadow: 0 0 12px 4px #0080005c;
+}
+.grid-status.error {
+  background: red;
 }
 </style>

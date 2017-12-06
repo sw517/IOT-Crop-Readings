@@ -5,7 +5,7 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <div class="grid-content">
-              <h3>Greenhouse Sensors</h3>
+              <h3 style="font-weight: 400">Canterbury Gardens</h3>
             </div>
           </el-col>
           <el-col :span="6">
@@ -16,7 +16,7 @@
           </el-col>
           <el-col :span="6">
             <div class="grid-content">
-              <h5>Internet of Things: Assignment 3</h5>
+              <h5>Internet of Things: Assignment 3: Greenhouse Data</h5>
             </div>
           </el-col>
         </el-row>
@@ -146,7 +146,7 @@ export default {
 }
 
 .grid-content {
-  border-radius: 4px;
+  border-radius: 8px;
   min-height: 36px;
 }
 
