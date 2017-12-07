@@ -16,7 +16,7 @@
       This is a test
     </router-link>
     <el-row :gutter="20">
-      <el-col class="graph-col" :span="12"
+      <el-col class="graph-col" :span="4"
         v-for="site in this.$myStore.state.sites"
         :key="site.key"
       >
@@ -45,19 +45,20 @@ export default {
   methods: {
     getDevices() {
       this.dataLoaded = false;
-      const Mysensors = [];
-      Object.keys(this.$myStore.state.sensors).forEach((type) => {
-        console.log('type: ' + type);
-        this.$myStore.state.sensors[type];
-        console.log('array: '+ this.$myStore.state.sensors[type]);
-        this.$myStore.state.sensors[type].forEach((sens) => {
-          console.log('sens: '+ sens);
+      this.sensors = [];
+      let sensors = [];
+      this.$myStore.state.sites.forEach((site) => {
+        site.zones.forEach((zone) => {
+          const locationString = `${site.id}_${zone.id}`;
+          sensors = sensors.concat(this.$myStore.state.zones[locationString]);
+          console.log('current: '+ sensors);
         });
       });
-      console.log('sensors: ' + Mysensors);
+      console.log('Sensors = ' + sensors);
       return new Promise((resolve, reject) => {
         // eslint-disable-next-line
-        for (const sensor of Mysensors) {
+        for (const sensor of sensors) {
+          // console.log(sensor.type);
           const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
           API.requestDevice({
             device_id: sensor.name,

@@ -15,12 +15,12 @@
             :key="sensor.key"
             :name="sensor.name"
             :width="500"
-            :height="400"
+            :height="300"
             :chart-data="sensor"
             :options="{ maintainAspectRatio: false }"
           />
           <div>
-            <h5>Sample rate - {{sensor.type}}</h5>
+            <h5>Sample rate -  </h5>
           </div>
         </div>
       </el-col>
@@ -73,22 +73,22 @@ export default {
     formatData(data) {
       if (!data) return;
       // eslint-disable-next-line
-      console.log('Data: ' + data);
+      // console.log('Data: ' + data);
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
       const graphColor = this.$myStore.state.dataTypes[data.type].graphColor;
       // eslint-disable-next-line
-      console.log('Unit Key: ' + unitKey);
+      // console.log('Unit Key: ' + unitKey);
       // eslint-disable-next-line
-      console.log('Data Type: ' + data.type);
+      // console.log('Data Type: ' + data.type);
       // eslint-disable-next-line
-      console.log('graphColor: ' + graphColor);
+      // console.log('graphColor: ' + graphColor);
       const object = {
         key: data.data.id,
         name: data.data.name,
         labels: [],
         datasets: [
           {
-            backgroundColor: data.data[graphColor] || '#3a8ee6',
+            backgroundColor: graphColor || '#3a8ee6',
             label: data.data[unitKey] || 'Reading',
             data: [],
           },
@@ -116,7 +116,9 @@ export default {
       d.setDate(dateArray[2]);
       d.setHours(timeArray[0]);
       d.setMinutes(timeArray[1]);
-      return d.toString();
+      // eslint-disable-next-line
+      const displayStr = d.getDate() + "/" + (d.getMonth() + 1) + " - " + d.getHours() + ":" + d.getMinutes();
+      return displayStr;
     },
   },
   watch: {
