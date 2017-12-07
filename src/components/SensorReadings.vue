@@ -3,19 +3,6 @@
     <div class="sites">
       <h1>Garden Status</h1>
       <h2>{{this.$route.params.location}}</h2>
-        <router-link
-        :to="{
-          name: 'SensorDetails',
-          params: {
-            site: 'gh2',
-            location: 'co2Production',
-            sensor: 'gh2_co2Production_gas',
-            sample_rate: 'minute'
-          }
-        }"
-      >
-        This is a test
-      </router-link>
       <el-row :gutter="20">
         <el-col class="graph-col" :span="4">
           <div class="grid-content">Current Status</div>
@@ -24,31 +11,36 @@
           v-for="site in this.$myStore.state.sites"
           :key="site.key"
         >
-          <div class="grid-content grid-status">
-            {{site.name}}
+          <div v-bind:id="site.id" class="grid-content grid-status">
+            <div>{{site.name}}</div>
+            <div class="el-icon-check"></div>
           </div>
         </el-col>
       </el-row>
     </div>
     <div class="weather">
-      <h1>Current Weather Conditions</h1>
+      <h1>Canterbury Weather</h1>
       <el-row :gutter="20">
         <el-col class="graph-col" :span="8">
           <div class="grid-content w-status w-description">
-            {{weather.description}}
+            <h4>Conditions</h4>
+            <h2>{{weather.description}}</h2>
           </div>
         </el-col>
         <el-col class="graph-col" :span="8">
           <div class="grid-content w-status w-temp">
-            {{weather.temp}}°C
+            <h4>Temperature</h4>
+            <h2>{{weather.temp}}°C</h2>
           </div>
         </el-col>
         <el-col class="graph-col" :span="8">
           <div class="grid-content w-status w-hum">
-            {{weather.hum}}%
+            <h4>Humidity</h4>
+            <h2>{{weather.hum}}%</h2>
           </div>
         </el-col>
       </el-row>
+      
     </div>
   </div>
 </template>
@@ -187,9 +179,19 @@ a {
 .w-status {
   text-transform: capitalize;
   color: #fff;
+  background: #545c64;
   box-shadow: 0 0 12px 4px #ccc;
 }
-.w-description {
-  background: #3a8ee6;
+.w-status h2 {
+  font-size: 30px;
+  font-weight: 400;
+}
+.w-status h4 {
+  font-size: 15px;
+  font-weight: 400;
+}
+.el-icon-check,
+.el-icon-close {
+  margin-top: 10px;
 }
 </style>
