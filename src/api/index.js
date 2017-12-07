@@ -42,6 +42,16 @@ const API = {
     if (params.sample_rate) queryString += `/${params.sample_rate}`;
     return queryString;
   },
+
+  requestWeather() {
+    // API KEY: c995bf82a5ce1e9df10cfdeb6cee4430
+    const baseurl = 'http://api.openweathermap.org/data/2.5/weather';
+    const location = 'canterbury';
+    const apiKey = 'c995bf82a5ce1e9df10cfdeb6cee4430';
+    const queryString = `${baseurl}?q=${location}&APPID=${apiKey}`;
+    console.log(queryString);
+    return axios.get(queryString);
+  },
 };
 
 export { API as default };

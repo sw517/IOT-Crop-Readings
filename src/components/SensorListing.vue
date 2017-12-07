@@ -20,7 +20,7 @@
             :options="{ maintainAspectRatio: false }"
           />
           <div>
-            <h5>Sample rate -  </h5>
+            <h5>Sample rate - every {{sensor.sampleRate}} </h5>
           </div>
         </div>
       </el-col>
@@ -72,19 +72,12 @@ export default {
     },
     formatData(data) {
       if (!data) return;
-      // eslint-disable-next-line
-      // console.log('Data: ' + data);
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
       const graphColor = this.$myStore.state.dataTypes[data.type].graphColor;
-      // eslint-disable-next-line
-      // console.log('Unit Key: ' + unitKey);
-      // eslint-disable-next-line
-      // console.log('Data Type: ' + data.type);
-      // eslint-disable-next-line
-      // console.log('graphColor: ' + graphColor);
       const object = {
         key: data.data.id,
         name: data.data.name,
+        sampleRate: this.$myStore.state.dataTypes[data.type].sample_rate,
         labels: [],
         datasets: [
           {
@@ -97,6 +90,7 @@ export default {
       const { values } = this.$myStore.state.dataTypes[data.type];
       data.data[values].length = 14;
       data.data[values].forEach(([time, reading]) => {
+        console.log(time);
         const newTime = this.createDate(time);
         object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);
@@ -116,8 +110,14 @@ export default {
       d.setDate(dateArray[2]);
       d.setHours(timeArray[0]);
       d.setMinutes(timeArray[1]);
+      let mins = d.getMinutes();
+      if (d.getMinutes() === 0) {
+        mins = '00';
+      } else {
+        mins = d.getMinutes();
+      }
       // eslint-disable-next-line
-      const displayStr = d.getDate() + "/" + (d.getMonth() + 1) + " - " + d.getHours() + ":" + d.getMinutes();
+      const displayStr = d.getDate() + "/" + (d.getMonth() + 1) + " - " + d.getHours() + ":" + mins;
       return displayStr;
     },
   },
