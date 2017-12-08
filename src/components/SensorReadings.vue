@@ -56,14 +56,14 @@
 
 
 <script>
-import API from '../api';
-import VueWeatherWidget from 'vue-weather-widget';
 import 'vue-weather-widget/dist/css/vue-weather-widget.css';
+import VueWeatherWidget from 'vue-weather-widget';
+import API from '../api';
 
 export default {
   name: 'SensorListing',
   components: {
-    'weather': VueWeatherWidget,
+    weather: VueWeatherWidget,
   },
   data() {
     return {
@@ -93,7 +93,6 @@ export default {
             sample_rate: currentSampleRate,
           })
             .then((response) => {
-              // console.log({ data: response.data, type: sensor.type });
               this.formatData({ data: response.data, type: sensor.type });
             });
         }
@@ -104,6 +103,7 @@ export default {
     formatData(data) {
       if (!data) return;
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
+      console.log(data.data.id);
       const object = {
         key: data.data.id,
         name: data.data.name,
@@ -116,48 +116,53 @@ export default {
         ],
       };
       const { values } = this.$myStore.state.dataTypes[data.type];
-      data.data[values].length = 14;
-      data.data[values].forEach(([time, reading]) => {
+      let arrayLength = 12;
+      if (this.$myStore.state.dataTypes[data.type].sample_rate === '10minute') {
+        arrayLength = 72;
+      } else if (this.$myStore.state.dataTypes[data.type].sample_rate === 'minute') {
+        arrayLength = 320;
+      }
+      // eslint-disable-next-line
+      const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
+      updatedArray.forEach(([time, reading]) => {
         object.labels.push(time);
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
+      if (data.data.id === 'gh1_plantzone_1_temp') {
+        this.processData(object);
+      }
     },
-    processData() {
+    processData(object) {
+      console.log(object);
     },
     getWeather() {
       API.requestWeather()
         .then((response) => {
-          // console.log({ data: response.data, type: sensor.type });
           this.formatWeather({ data: response.data });
         });
     },
     formatWeather(weatherData) {
-      console.log(weatherData);
       // Temp from API is in Kelvin therefore minus 273.15 from all temps
       this.weather = {
         location: weatherData.data.name,
         temp: weatherData.data.main.temp - 273.15,
         hum: weatherData.data.main.humidity,
         description: weatherData.data.weather[0].description,
-        // minTemp: weatherData.data.main.temp_min - 273.15,
-        // maxTemp: weatherData.data.main.temp_max - 273.15,
       };
-      console.log('OBJECT');
-      console.log(this.weather);
     },
   },
   watch: {
     $route() {
       this.getDevices();
       this.processData();
-      this.getWeather();
+      // this.getWeather();
     },
   },
   created() {
     this.getDevices();
     this.processData();
-    this.getWeather();
+    // this.getWeather();
   },
 };
 </script>

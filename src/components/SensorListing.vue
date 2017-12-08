@@ -4,7 +4,7 @@
     <h2>{{this.$route.params.location}}</h2>
     <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
-      <el-col class="graph-col" :span="12"
+      <el-col class="graph-col" :span="24"
         v-if="dataLoaded"
         v-for="sensor in sensors"
         :key="sensor.key"
@@ -88,7 +88,13 @@ export default {
         ],
       };
       const { values } = this.$myStore.state.dataTypes[data.type];
-      const arrayLength = 14;
+      let arrayLength = 12;
+      if (this.$myStore.state.dataTypes[data.type].sample_rate === '10minute') {
+        console.log('hour');
+        arrayLength = 72;
+      } else if (this.$myStore.state.dataTypes[data.type].sample_rate === 'minute') {
+        arrayLength = 320;
+      }
       // eslint-disable-next-line
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
       console.log(updatedArray);
