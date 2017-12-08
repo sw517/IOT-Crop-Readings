@@ -88,9 +88,11 @@ export default {
         ],
       };
       const { values } = this.$myStore.state.dataTypes[data.type];
-      data.data[values].length = 14;
-      data.data[values].forEach(([time, reading]) => {
-        console.log(time);
+      const arrayLength = 14;
+      // eslint-disable-next-line
+      const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
+      console.log(updatedArray);
+      updatedArray.forEach(([time, reading]) => {
         const newTime = this.createDate(time);
         object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);

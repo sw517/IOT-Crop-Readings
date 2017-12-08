@@ -27,7 +27,7 @@
             <el-menu
               :default-active="$route.path"
               :router="true" 
-              background-color="#545c64"
+              background-color="#4a8c2a"
               text-color="#fff"
               active-text-color="#ffd04b"
             >						
@@ -49,7 +49,7 @@
                 >
                   Overview
                 </el-menu-item>
-                <el-menu-item-group title="Sensor Listings">
+                <el-menu-item-group title="Zone Listings:">
                   <el-menu-item
                     v-for="location in site.zones"
                     :index="'/' + site.id + '/' + location.id"
@@ -96,7 +96,17 @@ export default {
 }
 
 .el-header {
-  background-color: #545c64;
+  background-color: #4a8c2a;
+  color: #fff;
+}
+.el-menu-item-group__title {
+  color: #fff;
+  font-size: 10px;
+  font-style: italic;
+}
+
+.el-submenu__title i,
+.el-menu-item i {
   color: #fff;
 }
 

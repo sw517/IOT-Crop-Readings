@@ -1,11 +1,10 @@
 <template>
   <div class="dash">
     <div class="sites">
-      <h1>Garden Status</h1>
-      <h2>{{this.$route.params.location}}</h2>
+      <!-- <h2>{{this.$route.params.location}}</h2> -->
       <el-row :gutter="20">
         <el-col class="graph-col" :span="4">
-          <div class="grid-content">Current Status</div>
+          <div class="grid-content">Gardens' Status</div>
         </el-col>
         <el-col class="graph-col" :span="4"
           v-for="site in this.$myStore.state.sites"
@@ -19,8 +18,7 @@
       </el-row>
     </div>
     <div class="weather">
-      <h1>Canterbury Weather</h1>
-      <el-row :gutter="20">
+      <!-- <el-row :gutter="20">
         <el-col class="graph-col" :span="8">
           <div class="grid-content w-status w-description">
             <h4>Conditions</h4>
@@ -39,18 +37,33 @@
             <h2>{{weather.hum}}%</h2>
           </div>
         </el-col>
-      </el-row>
-      
+      </el-row> -->
+      <div class="weatherwidget">
+        <weather 
+          api-key="fcfefb32da5e585b808589366e32bc10"
+          title="Canterbury Weather"
+          latitude="51.280233"
+          longitude="1.078909"
+          bar-color="#545C66"
+          text-color="#545C66"
+          language="en"
+          units="uk">
+        </weather>
+      </div>
     </div>
   </div>
 </template>
 
+
 <script>
 import API from '../api';
+import VueWeatherWidget from 'vue-weather-widget';
+import 'vue-weather-widget/dist/css/vue-weather-widget.css';
 
 export default {
   name: 'SensorListing',
   components: {
+    'weather': VueWeatherWidget,
   },
   data() {
     return {
