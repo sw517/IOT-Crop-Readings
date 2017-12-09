@@ -41,7 +41,7 @@ export default new Vuex.Store({
       },
       tempHumid: {
         unit: 'temp_scale',
-        values: 'humidity_value',
+        values: 'temperature_value',
         sample_rate: '10minute',
         graphColor: '#fc7976',
       },

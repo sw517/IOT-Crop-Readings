@@ -23,39 +23,37 @@
       </el-card>
       <el-row :gutter="20">
         <el-col class="graph-col" :span="4">
-          <div class="grid-content">Gardens' Status</div>
+          <div class="grid-content" style="box-sizing: border-box">
+            <div style="font-weight: 700">Gardens' Status</div>
+            <div class="legend">
+              <div class="el-icon-info okay"></div>All data in optimal range
+              <div class="break"></div>
+              <div class="el-icon-info warning"></div>One or more values from sensors found out of optimal range
+            </div>
+          </div>          
         </el-col>
-        <!-- <el-col class="graph-col" :span="4"
-          v-for="site in this.$myStore.state.sites"
-          :key="site.key"
-        >
-          <div v-bind:id="site.id" v-bind:class="{ error: `${site.id}Warning` }" class="grid-content grid-status">
-            <div>{{site.name}}</div>
-            <div class="el-icon-check"></div>
-          </div>
-        </el-col> -->
         <el-col class="graph-col" :span="4">
-          <div id="gh1" v-bind:class="{ error : gh1Warning}" class="grid-content grid-status">
+          <div id="gh1" v-bind:class="{ warning : gh1Warning}" class="grid-content grid-status">
             <div>Greenhouse 1</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="gh2" v-bind:class="{ error : gh2Warning}" class="grid-content grid-status">
+          <div id="gh2" v-bind:class="{ warning : gh2Warning}" class="grid-content grid-status">
             <div>Greenhouse 2</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="gh3" v-bind:class="{ error : gh3Warning}" class="grid-content grid-status">
+          <div id="gh3" v-bind:class="{ warning : gh3Warning}" class="grid-content grid-status">
             <div>Greenhouse 3</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="outside" v-bind:class="{ error : outsideWarning}" class="grid-content grid-status">
+          <div id="outside" v-bind:class="{ warning : outsideWarning}" class="grid-content grid-status">
             <div>Outdoor Beds</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="house" v-bind:class="{ error : houseWarning}" class="grid-content grid-status">
+          <div id="house" v-bind:class="{ warning : houseWarning}" class="grid-content grid-status">
             <div>Main House</div>
           </div>
         </el-col>
@@ -158,79 +156,104 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
-      // if (data.data.id === 'gh1_plantzone_1_temp') {
-        this.processData(object);
-      // }
+      this.processData(object);
     },
-    // Check sensor data against assignment brief specification
-    // e.g Lettuce must be between 7 and 29 degrees
+    // Check sensor data against assignment brief specification.
+    // e.g Lettuce must be between 7 and 29 degrees.
+    // Values are assessed by 2 units more than their optimum condition.
+    // e.g If optimum temperature is 8°C to 10°C, the range is increased to 6°C to 12°C
+    // in order to avoid unnecessary warning notifications for 1°C out of bounds.
     processData(object) {
-      // console.log(object.datasets[0].data);
       // GH1 Cactus Temperature
       if (object.key === 'gh1_plantzone_1_temp') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (this.isWinter(object.labels[index]) && this.isNight(object.labels[index])) {
-            if (value < 8 || value > 10) {
+            if (value < 6 || value > 12) {
               const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
-              const description = 'In winter at night, temperature should be between 8 and 10°C'
+              const description = 'In winter at night, temperature for cactae should be between 8°C and 10°C';
               this.notifications.push({ index, notification, description });
               this.setStatus(object);
             }
-          } else {  
-            if (value < 7 || value > 29) {
-              const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
-              const description = 'Temperature should be between 7 and 29°C during the day'
-              this.notifications.push({ index, notification, description });
-              this.setStatus(object);
-            }
+          } else if (value < 5 || value > 31) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            const description = 'Temperature for cactae should be between 7°C and 29°C during the day';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object);
           }
         });
-      }
-      // GH1 Cactus Light
-      else if (object.key === 'gh1_plantzone_1_lux') {
+      } /* GH1 Cactus Light */ else if (object.key === 'gh1_plantzone_1_lux') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value > 800) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was below 800 Lux`;
-            this.notifications.push({ index, notification });
+          if (value < 800) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value} lux`;
+            const description = 'Cactae need more light';
+            this.notifications.push({ index, notification, description });
             this.setStatus(object);
-          }          
+          }
         });
-      }
-      // GH1 Cactus Moisture
-      else if (object.key === 'gh1_plantzone_1_moisture') {
+      } /* GH1 Cactus Moisture */ else if (object.key === 'gh1_plantzone_1_moisture') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (value > 0.3) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was too moist(>30%)`;
-            this.notifications.push({ index, notification });
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}% vwc`;
+            const description = 'Cactae should be kept fairly dry';
+            this.notifications.push({ index, notification, description });
             this.setStatus(object);
-          }          
+          }
+        });
+      } /* GH2 Lettuce Temperature */ else if (object.key === 'gh2_plantzone_1_temp') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value < 5 || value > 20) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            const description = 'Temperature for lettuce should be between 7°C and 18°C';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object);
+          }
+        });
+      } /* GH3 Seedling Temperature */ else if (object.key === 'gh3_seed_temp') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value < 280 || value > 300) {
+            // const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}K`;
+            // const description = 'Temperature for seedlings should be between 10°C and 26°C';
+            const description = 'Temperature for seedlings should be between 280K and 300K';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object);
+          }
+        });
+      } /* Outdoor Muck Heap Temperature */ else if (object.key === 'outside_heap_temp') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value < 30 || value > 48) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            const description = 'Temperature for compost heap should be around 40°C';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object);
+          }
         });
       }
-      // GH2 Lettuce Temperature
-      
     },
     isNight(dateString) {
-      const tempArray = dateString.split("T");
+      const tempArray = dateString.split('T');
       const time = tempArray[1];
-      const timeSplit = time.split(":");
+      const timeSplit = time.split(':');
       const hour = timeSplit[0];
       let isNight = false;
-      
-      if(hour > 16 || hour < 6) {
+      if (hour > 16 || hour < 6) {
         isNight = true;
       }
       return isNight;
     },
     isWinter(dateString) {
-      const tempArray = dateString.split("T");
+      const tempArray = dateString.split('T');
       const date = tempArray[0];
-      const dateSplit = date.split("-");
+      const dateSplit = date.split('-');
       const month = dateSplit[1];
-      let isWinter = false;      
-      if(month > 11 || month < 4) {
+      let isWinter = false;
+      if (month > 11 || month < 4) {
         isWinter = true;
       }
       return isWinter;
@@ -320,12 +343,12 @@ a {
   color: #42b983;
 }
 .grid-status {
-  background: #1e931e;
-  color: #fff;
+  border: 3px solid #1e931e;
+  box-sizing: border-box;
   box-shadow: 0 0 12px 4px #0080005c;
 }
-.grid-status.error {
-  background: #eb9e05;
+.grid-status.warning {
+  border-color: #eb9e05;
 }
 .weather {
   margin-top: 60px;
@@ -369,6 +392,16 @@ a {
 .box-card.notification-card {
   width: 100%;
   text-align: left;
+}
+.el-icon-info {
+  padding: 10px 10px 0 0;
+  clear: both;
+}
+.el-icon-info.okay {
+  color:#1e931e;
+}
+.el-icon-info.warning {
+  color:#eb9e05;
 }
 </style>
 <style>
