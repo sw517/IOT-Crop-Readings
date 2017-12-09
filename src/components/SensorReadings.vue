@@ -14,6 +14,7 @@
         <div v-for="message in notifications" :key="message.index" class="text item">
           <el-alert
             :title='message.notification'
+            :description='message.description'
             type="warning"
             show-icon>
           </el-alert>
@@ -157,31 +158,94 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
-      if (data.data.id === 'gh1_plantzone_1_temp'
-        || 'gh1_plantzone_1_moisture'  
-      ) {
+      // if (data.data.id === 'gh1_plantzone_1_temp') {
         this.processData(object);
-      }
+      // }
     },
+    // Check sensor data against assignment brief specification
+    // e.g Lettuce must be between 7 and 29 degrees
     processData(object) {
       // console.log(object.datasets[0].data);
-      object.datasets[0].data.forEach((value, index) => {
-        if (value <6) {
+      // GH1 Cactus Temperature
+      if (object.key === 'gh1_plantzone_1_temp') {
+        object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          this.$myStore.state.sites.forEach((site) => {
-            site.zones.forEach((zone) => {
-              if (object.key.includes(`${site.id}_${zone.id}`)) {
-                if (site.id === 'gh1') this.gh1Warning = true;
-                else if (site.id === 'gh2') this.gh2Warning = true;
-                else if (site.id === 'gh3') this.gh3Warning = true;
-                else if (site.id === 'outside') this.outside = true;
-                else if (site.id === 'house') thishouseWarning = true;
-              }
-            });
-          });
-          const notification = `[${timeStamp}] Warning: ${object.key} temperature was < 36 degress`;
-          this.notifications.push({ index, notification });
-        }
+          if (this.isWinter(object.labels[index]) && this.isNight(object.labels[index])) {
+            if (value < 8 || value > 10) {
+              const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+              const description = 'In winter at night, temperature should be between 8 and 10°C'
+              this.notifications.push({ index, notification, description });
+              this.setStatus(object);
+            }
+          } else {  
+            if (value < 7 || value > 29) {
+              const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+              const description = 'Temperature should be between 7 and 29°C during the day'
+              this.notifications.push({ index, notification, description });
+              this.setStatus(object);
+            }
+          }
+        });
+      }
+      // GH1 Cactus Light
+      else if (object.key === 'gh1_plantzone_1_lux') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value > 800) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was below 800 Lux`;
+            this.notifications.push({ index, notification });
+            this.setStatus(object);
+          }          
+        });
+      }
+      // GH1 Cactus Moisture
+      else if (object.key === 'gh1_plantzone_1_moisture') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value > 0.3) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was too moist(>30%)`;
+            this.notifications.push({ index, notification });
+            this.setStatus(object);
+          }          
+        });
+      }
+      // GH2 Lettuce Temperature
+      
+    },
+    isNight(dateString) {
+      const tempArray = dateString.split("T");
+      const time = tempArray[1];
+      const timeSplit = time.split(":");
+      const hour = timeSplit[0];
+      let isNight = false;
+      
+      if(hour > 16 || hour < 6) {
+        isNight = true;
+      }
+      return isNight;
+    },
+    isWinter(dateString) {
+      const tempArray = dateString.split("T");
+      const date = tempArray[0];
+      const dateSplit = date.split("-");
+      const month = dateSplit[1];
+      let isWinter = false;      
+      if(month > 11 || month < 4) {
+        isWinter = true;
+      }
+      return isWinter;
+    },
+    setStatus(object) {
+      this.$myStore.state.sites.forEach((site) => {
+        site.zones.forEach((zone) => {
+          if (object.key.includes(`${site.id}_${zone.id}`)) {
+            if (site.id === 'gh1') this.gh1Warning = true;
+            else if (site.id === 'gh2') this.gh2Warning = true;
+            else if (site.id === 'gh3') this.gh3Warning = true;
+            else if (site.id === 'outside') this.outside = true;
+            else if (site.id === 'house') this.houseWarning = true;
+          }
+        });
       });
     },
     getWeather() {
