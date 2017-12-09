@@ -2,42 +2,65 @@
   <div class="dash">
     <div class="sites">
       <!-- <h2>{{this.$route.params.location}}</h2> -->
+      <el-card class="box-card notification-card">
+        <div slot="header" class="clearfix">
+          <span>Notifications</span>
+        </div>
+        <el-alert v-if="notifications.length == 0"
+          title="No warnings found in Canterbury Gardens"
+          type="success"
+          show-icon>
+        </el-alert>
+        <div v-for="message in notifications" :key="message.index" class="text item">
+          <el-alert
+            :title='message.notification'
+            type="warning"
+            show-icon>
+          </el-alert>
+          <!-- {{message.notification}} -->
+        </div>
+      </el-card>
       <el-row :gutter="20">
         <el-col class="graph-col" :span="4">
           <div class="grid-content">Gardens' Status</div>
         </el-col>
-        <el-col class="graph-col" :span="4"
+        <!-- <el-col class="graph-col" :span="4"
           v-for="site in this.$myStore.state.sites"
           :key="site.key"
         >
-          <div v-bind:id="site.id" class="grid-content grid-status">
+          <div v-bind:id="site.id" v-bind:class="{ error: `${site.id}Warning` }" class="grid-content grid-status">
             <div>{{site.name}}</div>
             <div class="el-icon-check"></div>
+          </div>
+        </el-col> -->
+        <el-col class="graph-col" :span="4">
+          <div id="gh1" v-bind:class="{ error : gh1Warning}" class="grid-content grid-status">
+            <div>Greenhouse 1</div>
+          </div>
+        </el-col>
+        <el-col class="graph-col" :span="4">
+          <div id="gh2" v-bind:class="{ error : gh2Warning}" class="grid-content grid-status">
+            <div>Greenhouse 2</div>
+          </div>
+        </el-col>
+        <el-col class="graph-col" :span="4">
+          <div id="gh3" v-bind:class="{ error : gh3Warning}" class="grid-content grid-status">
+            <div>Greenhouse 3</div>
+          </div>
+        </el-col>
+        <el-col class="graph-col" :span="4">
+          <div id="outside" v-bind:class="{ error : outsideWarning}" class="grid-content grid-status">
+            <div>Outdoor Beds</div>
+          </div>
+        </el-col>
+        <el-col class="graph-col" :span="4">
+          <div id="house" v-bind:class="{ error : houseWarning}" class="grid-content grid-status">
+            <div>Main House</div>
           </div>
         </el-col>
       </el-row>
     </div>
     <div class="weather">
-      <!-- <el-row :gutter="20">
-        <el-col class="graph-col" :span="8">
-          <div class="grid-content w-status w-description">
-            <h4>Conditions</h4>
-            <h2>{{weather.description}}</h2>
-          </div>
-        </el-col>
-        <el-col class="graph-col" :span="8">
-          <div class="grid-content w-status w-temp">
-            <h4>Temperature</h4>
-            <h2>{{weather.temp}}°C</h2>
-          </div>
-        </el-col>
-        <el-col class="graph-col" :span="8">
-          <div class="grid-content w-status w-hum">
-            <h4>Humidity</h4>
-            <h2>{{weather.hum}}%</h2>
-          </div>
-        </el-col>
-      </el-row> -->
       <div class="weatherwidget">
         <weather 
           api-key="fcfefb32da5e585b808589366e32bc10"
@@ -71,6 +94,12 @@ export default {
       sampleRate: '10minute',
       sensors: [],
       weather: {},
+      notifications: [],
+      gh1Warning: false,
+      gh2Warning: false,
+      gh3Warning: false,
+      outsideWarning: false,
+      houseWarning: false,
     };
   },
   methods: {
@@ -103,7 +132,6 @@ export default {
     formatData(data) {
       if (!data) return;
       const unitKey = this.$myStore.state.dataTypes[data.type].unit;
-      console.log(data.data.id);
       const object = {
         key: data.data.id,
         name: data.data.name,
@@ -129,12 +157,32 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
-      if (data.data.id === 'gh1_plantzone_1_temp') {
+      if (data.data.id === 'gh1_plantzone_1_temp'
+        || 'gh1_plantzone_1_moisture'  
+      ) {
         this.processData(object);
       }
     },
     processData(object) {
-      console.log(object);
+      // console.log(object.datasets[0].data);
+      object.datasets[0].data.forEach((value, index) => {
+        if (value <6) {
+          const timeStamp = this.createDate(object.labels[index]);
+          this.$myStore.state.sites.forEach((site) => {
+            site.zones.forEach((zone) => {
+              if (object.key.includes(`${site.id}_${zone.id}`)) {
+                if (site.id === 'gh1') this.gh1Warning = true;
+                else if (site.id === 'gh2') this.gh2Warning = true;
+                else if (site.id === 'gh3') this.gh3Warning = true;
+                else if (site.id === 'outside') this.outside = true;
+                else if (site.id === 'house') thishouseWarning = true;
+              }
+            });
+          });
+          const notification = `[${timeStamp}] Warning: ${object.key} temperature was < 36 degress`;
+          this.notifications.push({ index, notification });
+        }
+      });
     },
     getWeather() {
       API.requestWeather()
@@ -142,6 +190,31 @@ export default {
           this.formatWeather({ data: response.data });
         });
     },
+    createDate(dateString) {
+      const d = new Date();
+      const dateTimeArray = dateString.split('T');
+      const dateStr = dateTimeArray[0];
+      const timeStr = dateTimeArray[1];
+      const dateArray = dateStr.split('-');
+      const timeArray = timeStr.split(':');
+      // set Date() var
+      d.setFullYear(dateArray[0]);
+      d.setMonth((dateArray[1] - 1));
+      d.setDate(dateArray[2]);
+      d.setHours(timeArray[0]);
+      d.setMinutes(timeArray[1]);
+      let mins = d.getMinutes();
+      if (d.getMinutes() === 0) {
+        mins = '00';
+      } else {
+        mins = d.getMinutes();
+      }
+      // eslint-disable-next-line
+      const displayStr = d.getDate() + "/" + (d.getMonth() + 1) + " - " + d.getHours() + ":" + mins;
+      return displayStr;
+    },
+    // Format weather data from the weather API
+    // *** NOT USED NOW THAT A COMPONENT HAS BEEN ADDED FROM VUE
     formatWeather(weatherData) {
       // Temp from API is in Kelvin therefore minus 273.15 from all temps
       this.weather = {
@@ -155,14 +228,13 @@ export default {
   watch: {
     $route() {
       this.getDevices();
-      this.processData();
-      // this.getWeather();
     },
   },
+  // updated() {
+  //   this.updateStatus();
+  // },
   created() {
     this.getDevices();
-    this.processData();
-    // this.getWeather();
   },
 };
 </script>
@@ -189,7 +261,7 @@ a {
   box-shadow: 0 0 12px 4px #0080005c;
 }
 .grid-status.error {
-  background: red;
+  background: #eb9e05;
 }
 .weather {
   margin-top: 60px;
@@ -211,5 +283,33 @@ a {
 .el-icon-check,
 .el-icon-close {
   margin-top: 10px;
+}
+
+.text {
+    font-size: 14px;
+  }
+.item {
+  margin-bottom: 18px;
+}
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both
+}
+.box-card {
+  width: 480px;
+}
+.box-card.notification-card {
+  width: 100%;
+  text-align: left;
+}
+</style>
+<style>
+.el-card__body {
+  max-height: 175px;
+  overflow-y: auto;
 }
 </style>

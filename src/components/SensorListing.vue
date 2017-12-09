@@ -99,6 +99,7 @@ export default {
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
       console.log(updatedArray);
       updatedArray.forEach(([time, reading]) => {
+        if (reading == null) return; // Skip any null values
         const newTime = this.createDate(time);
         object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);
