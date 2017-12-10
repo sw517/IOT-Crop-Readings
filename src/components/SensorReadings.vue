@@ -28,32 +28,34 @@
             <div class="legend">
               <div class="el-icon-info okay"></div>All data in optimal range
               <div class="break"></div>
-              <div class="el-icon-info warning"></div>One or more values from sensors found out of optimal range
+              <div class="el-icon-info warning"></div>Value found out of optimal range
+              <div class="break"></div>
+              <div class="el-icon-info error"></div>Null value returned from sensor
             </div>
           </div>          
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="gh1" v-bind:class="{ warning : gh1Warning}" class="grid-content grid-status">
+          <div id="gh1" v-bind:class="{ warning : gh1Warning, error : gh1Error }" class="grid-content grid-status">
             <div>Greenhouse 1</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="gh2" v-bind:class="{ warning : gh2Warning}" class="grid-content grid-status">
+          <div id="gh2" v-bind:class="{ warning : gh2Warning, error : gh2Error }" class="grid-content grid-status">
             <div>Greenhouse 2</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="gh3" v-bind:class="{ warning : gh3Warning}" class="grid-content grid-status">
+          <div id="gh3" v-bind:class="{ warning : gh3Warning, error : gh3Error }" class="grid-content grid-status">
             <div>Greenhouse 3</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="outside" v-bind:class="{ warning : outsideWarning}" class="grid-content grid-status">
+          <div id="outside" v-bind:class="{ warning : outsideWarning, error : outsideError}" class="grid-content grid-status">
             <div>Outdoor Beds</div>
           </div>
         </el-col>
         <el-col class="graph-col" :span="4">
-          <div id="house" v-bind:class="{ warning : houseWarning}" class="grid-content grid-status">
+          <div id="house" v-bind:class="{ warning : houseWarning, error : houseError }" class="grid-content grid-status">
             <div>Main House</div>
           </div>
         </el-col>
@@ -99,6 +101,11 @@ export default {
       gh3Warning: false,
       outsideWarning: false,
       houseWarning: false,
+      gh1Error: false,
+      gh2Error: false,
+      gh3Error: false,
+      outsideError: false,
+      houseError: false,
     };
   },
   methods: {
@@ -153,7 +160,7 @@ export default {
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
       updatedArray.forEach(([time, reading]) => {
         object.labels.push(time);
-        object.datasets[0].data.push(reading || 0);
+        object.datasets[0].data.push(reading);
       });
       this.sensors.push(object);
       this.processData(object, false);
@@ -179,10 +186,10 @@ export default {
         // eslint-disable-next-line
         const updatedArray = data.data['humidity_value'].slice(Math.max(data.data['humidity_value'].length - arrayLength, 0));
         updatedArray.forEach(([time, reading]) => {
-          if (reading == null) return; // Skip any null values
+          // if (reading == null) return; // Skip any null values
           const newTime = this.createDate(time);
           objectHum.labels.push(newTime);
-          objectHum.datasets[0].data.push(reading || 0);
+          objectHum.datasets[0].data.push(reading);
         });
         this.sensors.push(objectHum);
         this.processData(objectHum, true);
@@ -196,83 +203,155 @@ export default {
     processData(object, humidity) {
       // GH1 Cactus Temperature
       if (object.key === 'gh1_plantzone_1_temp' && humidity === false) {
-        console.log(object.datasets[0].data);
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (this.isWinter(object.labels[index]) && this.isNight(object.labels[index])) {
             if (value < 6 || value > 12) {
-              const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+              let status = 'warning';
+              let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
               const description = 'In winter at night, temperature for cactae should be between 8°C and 10°C';
+              if (value == null) {
+                notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+                status = 'error';
+              }
               this.notifications.push({ index, notification, description });
-              this.setStatus(object);
+              this.setStatus(object, status);
             }
           } else if (value < 5 || value > 31) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            let status = 'warning';
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'warning';
+            }
             const description = 'Temperature for cactae should be between 7°C and 29°C during the day';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
       } /* GH1 Cactus Light */ else if (object.key === 'gh1_plantzone_1_lux') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (value < 0.7) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value} lux`;
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value} lux`;
+            let status = 'warning';
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             const description = 'Cactae need more light';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
       } /* GH1 Cactus Moisture */ else if (object.key === 'gh1_plantzone_1_moisture') {
         object.datasets[0].data.forEach((value, index) => {
+          // console.log(object);
           const timeStamp = this.createDate(object.labels[index]);
           if (value > 60) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}% vwc`;
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}% vwc`;
+            let status = 'warning';
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             const description = 'Cactae should be kept fairly dry';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
-      } /* GH1 Cactus Humidity */ else if (object.key === 'gh1_plantzone_1_temp') {
+      } /* GH1 Cactus Humidity */ else if (object.key === 'gh1_plantzone_1_temp-hum') {
         object.datasets[0].data.forEach((value, index) => {
-          const timeStamp = this.createDate(object.labels[index]);
+          const timeStamp = object.labels[index];
           if (value > 60) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}%`;
+            let status = 'warning';
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}%`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             const description = 'Humidity for cactae should be below 40%';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
       } /* GH2 Lettuce Temperature */ else if (object.key === 'gh2_plantzone_1_temp') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (value < 5 || value > 20) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            let status = 'warning';
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             const description = 'Temperature for lettuce should be between 7°C and 18°C';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
       } /* GH3 Seedling Temperature */ else if (object.key === 'gh3_seed_temp') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (value < 280 || value > 300) {
-            // const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}K`;
+            let status = 'warning';
+            // let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}K`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             // const description = 'Temperature for seedlings should be between 10°C and 26°C';
             const description = 'Temperature for seedlings should be between 280K and 300K';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
           }
         });
-      } /* Outdoor Muck Heap Temperature */ else if (object.key === 'outside_heap_temp') {
+      } /* Outdoor Muck Heap Temperature */ else if (object.key === 'outside_heap_temp' && humidity === false) {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (value < 30 || value > 48) {
-            const notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            let status = 'warning';
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
             const description = 'Temperature for compost heap should be around 40°C';
             this.notifications.push({ index, notification, description });
-            this.setStatus(object);
+            this.setStatus(object, status);
+          }
+        });
+      } /* Outdoor Muck Heap Humidity */ else if (object.key === 'outside_heap_temp-hum') {
+        // console.log('work');
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = object.labels[index];
+          if (value < 80) {
+            let status = 'warning';
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}%`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
+            const description = 'Humidity for compost heap should be high';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object, status);
+          }
+        });
+      } /* Outdoor Field Temperature */ else if (object.key === 'outside_field_temp') {
+        // console.log('work');
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = object.labels[index];
+          if (value < 20) {
+            let status = 'warning';
+            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}%`;
+            if (value == null) {
+              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
+              status = 'error';
+            }
+            const description = 'Temperature for outdoor crops should be kept cool below 20°C';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object, status);
           }
         });
       }
@@ -299,15 +378,24 @@ export default {
       }
       return isWinter;
     },
-    setStatus(object) {
+    setStatus(object, status) {
       this.$myStore.state.sites.forEach((site) => {
         site.zones.forEach((zone) => {
           if (object.key.includes(`${site.id}_${zone.id}`)) {
-            if (site.id === 'gh1') this.gh1Warning = true;
-            else if (site.id === 'gh2') this.gh2Warning = true;
-            else if (site.id === 'gh3') this.gh3Warning = true;
-            else if (site.id === 'outside') this.outside = true;
-            else if (site.id === 'house') this.houseWarning = true;
+            if (status === 'warning') {
+              if (site.id === 'gh1') this.gh1Warning = true;
+              else if (site.id === 'gh2') this.gh2Warning = true;
+              else if (site.id === 'gh3') this.gh3Warning = true;
+              else if (site.id === 'outside') this.outsideWarning = true;
+              else if (site.id === 'house') this.houseWarning = true;
+            }
+            if (status === 'error') {
+              if (site.id === 'gh1') this.gh1Error = true;
+              else if (site.id === 'gh2') this.gh2Error = true;
+              else if (site.id === 'gh3') this.gh3Error = true;
+              else if (site.id === 'outside') this.outsideError = true;
+              else if (site.id === 'house') this.houseError = true;
+            }
           }
         });
       });
@@ -391,6 +479,10 @@ a {
 .grid-status.warning {
   border-color: #eb9e05;
 }
+.grid-status.warning.error,
+.grid-status.error {
+  border-color: red;
+}
 .weather {
   margin-top: 60px;
 }
@@ -443,6 +535,10 @@ a {
 }
 .el-icon-info.warning {
   color:#eb9e05;
+}
+.el-icon-info.error,
+.el-icon-info.error.warning {
+  color:red;
 }
 </style>
 <style>

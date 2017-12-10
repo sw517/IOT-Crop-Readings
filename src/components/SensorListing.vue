@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
     <h1>Device Listing</h1>
-    <h2>{{this.$route.params.location}}</h2>
+    <h2>{{zoneName}}</h2>
     <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
       <el-col class="graph-col" :span="24"
@@ -42,12 +42,18 @@ export default {
       dataLoaded: false,
       sampleRate: '10minute',
       sensors: [],
+      zoneName: '',
     };
   },
   methods: {
     getDevices() {
       this.dataLoaded = false;
       this.sensors = [];
+      this.$myStore.state.sites.forEach((site) => {
+        site.zones.forEach((zone) => {
+          if (this.$route.params.location === zone.id) this.zoneName = `${site.name} - ${zone.name}`;
+        });
+      });
       const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
       const sensors = this.$myStore.state.zones[locationString];
       return new Promise((resolve, reject) => {
@@ -102,6 +108,7 @@ export default {
         const newTime = this.createDate(time);
         object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);
+        if (reading === 0) console.log(reading);
       });
       this.sensors.push(object);
       // HUMIDITY
@@ -114,7 +121,7 @@ export default {
           labels: [],
           datasets: [
             {
-              backgroundColor: 'orange' || '#3a8ee6',
+              backgroundColor: '#66b1ff',
               label: data.data[humScale] || 'Reading',
               data: [],
             },

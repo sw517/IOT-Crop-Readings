@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
     <h1>Device Listing</h1>
-    <h2>{{this.$route.params.location}}</h2>
+    <h2>Sensor Overview</h2>
     <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
       <el-col :span="24">
@@ -9,18 +9,18 @@
           <template>
             <el-table
               :data="sensors"
+              stripe
               align="left"
-              width="33%"
               style="width: 100%">
               <el-table-column
                 prop="name"
                 label="Sensor"
-                width="180">
+                width="400">
               </el-table-column>
               <el-table-column
                 prop="averageValue"
-                label="Average value [last 12 hours]"
-                width="180">
+                label="Average value [ last 12 hours ]"
+                width="400">
               </el-table-column>
               <el-table-column
                 prop="currentValue"
@@ -72,7 +72,7 @@ export default {
         for (const sensor of sensors) {
           API.requestDevice({
             device_id: sensor.name,
-            sample_rate: 'hour',
+            sample_rate: '10minute',
           })
             .then((response) => {
               this.formatData({ data: response.data, type: sensor.type });
@@ -107,7 +107,7 @@ export default {
       };
       // eslint-disable-next-line
       const { values } = this.$myStore.state.dataTypes[data.type];
-      const arrayLength = 12;
+      const arrayLength = 72;
       // eslint-disable-next-line
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
       updatedArray.forEach(([time, reading]) => {
@@ -117,7 +117,7 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       object.averageValue = `${this.averageValue(updatedArray)} ${data.data[unitKey]}`;
-      object.currentValue = `${this.currentValue(updatedArray)} ${data.data[unitKey]}`;
+      object.currentValue = this.currentValue(updatedArray, unitKey);
       this.sensors.push(object);
       // HUMIDITY
       if (data.type === 'tempHumid') {
@@ -148,7 +148,7 @@ export default {
           objectHum.datasets[0].data.push(reading || 0);
         });
         objectHum.averageValue = `${this.averageValue(updatedArray)} ${data.data[humScale]}`;
-        objectHum.currentValue = `${this.currentValue(updatedArray)} ${data.data[humScale]}`;
+        objectHum.currentValue = this.currentValue(updatedArray, data.data[humScale]);
         this.sensors.push(objectHum);
       }
     },
@@ -164,11 +164,11 @@ export default {
       }
       return (accum / tot).toFixed(2);
     },
-    currentValue(array) {
+    currentValue(array, reading) {
       if (array[array.length - 1][1] != null) {
-        return array[array.length - 1][1].toFixed(2);
+        return `${array[array.length - 1][1].toFixed(2)} ${reading}`;
       }
-      return 'Sensor returned null value. Ensure sensor is placed securely in relevant location';      
+      return '[Sensor returned null value. Ensure sensor is placed securely in relevant location]';
     },
     createDate(dateString) {
       const d = new Date();
@@ -222,5 +222,10 @@ li {
 }
 a {
   color: #42b983;
+}
+</style>
+<style>
+.el-table .cell {
+  word-break: normal;
 }
 </style>

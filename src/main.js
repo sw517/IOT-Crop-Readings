@@ -8,7 +8,7 @@ import App from './App';
 import router from './router';
 import storePlugin from './storePlugin';
 
-import './assets/element-variables.scss';
+import './assets/element-variables.scss'; // third-party ui library -> http://element.eleme.io
 
 Vue.use(storePlugin);
 Vue.use(Vuex);
