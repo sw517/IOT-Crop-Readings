@@ -4,25 +4,33 @@
     <h2>{{this.$route.params.location}}</h2>
     <!-- <div> All your devices will be prefixed with: {{$route.params.site}}_{{$route.params.location}}</div> -->
     <el-row :gutter="20">
-      <el-col class="graph-col" :span="8"
-        v-for="sensor in sensors"
-        :key="sensor.key"
-      >
-        <div class="grid-content">
-          <h3>{{sensor.name}}</h3>
-          <LineChart
-            :key="sensor.key"
-            :name="sensor.name"
-            :width="500"
-            :height="200"
-            :chart-data="sensor"
-            :options="{ maintainAspectRatio: false }"
-          />
-          <div>
-            <h5>Sample rate - every {{sensor.sampleRate}} </h5>
-          </div>
-        </div>
+      <el-col :span="24">
+        <el-card class="box-card">
+          <template>
+            <el-table
+              :data="sensors"
+              align="left"
+              width="33%"
+              style="width: 100%">
+              <el-table-column
+                prop="name"
+                label="Sensor"
+                width="180">
+              </el-table-column>
+              <el-table-column
+                prop="averageValue"
+                label="Average value [last 12 hours]"
+                width="180">
+              </el-table-column>
+              <el-table-column
+                prop="currentValue"
+                label="Current value">
+              </el-table-column>
+            </el-table>
+          </template>
+        </el-card>
       </el-col>
+      
     </el-row>
   </div>
 </template>
@@ -47,16 +55,24 @@ export default {
     getDevices() {
       this.dataLoaded = false;
       this.sensors = [];
-      // const locationString = `${this.$route.params.site}_${this.$route.params.location}`;
-      // const sensors = this.$myStore.state.zones[locationString];
-      const sensors = this.$myStore.state.siteSensors[this.$route.params.site];
+      let sensors = [];
+      this.$myStore.state.sites.forEach((site) => {
+        site.zones.forEach((zone) => {
+          const locationString = `${site.id}_${zone.id}`;
+          sensors = sensors.concat(this.$myStore.state.zones[locationString]);
+        });
+      });
+      // eslint-disable-next-line
+      for (let i = sensors.length - 1; i >= 0 ; i--) {
+        const siteId = this.$route.params.site;
+        if (!sensors[i].name.includes(siteId)) sensors.splice(i, 1);
+      }
       return new Promise((resolve, reject) => {
         // eslint-disable-next-line
         for (const sensor of sensors) {
-          const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
           API.requestDevice({
             device_id: sensor.name,
-            sample_rate: currentSampleRate,
+            sample_rate: 'hour',
           })
             .then((response) => {
               this.formatData({ data: response.data, type: sensor.type });
@@ -77,7 +93,9 @@ export default {
       const object = {
         key: data.data.id,
         name: data.data.name,
-        sampleRate: this.$myStore.state.dataTypes[data.type].sample_rate,
+        average: null,
+        current: null,
+        sampleRate: 'hour',
         labels: [],
         datasets: [
           {
@@ -87,15 +105,70 @@ export default {
           },
         ],
       };
+      // eslint-disable-next-line
       const { values } = this.$myStore.state.dataTypes[data.type];
-      data.data[values].length = 8;
-      data.data[values].forEach(([time, reading]) => {
-        // console.log(time);
+      const arrayLength = 12;
+      // eslint-disable-next-line
+      const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
+      updatedArray.forEach(([time, reading]) => {
+        if (reading == null) return; // Skip any null values
         const newTime = this.createDate(time);
         object.labels.push(newTime);
         object.datasets[0].data.push(reading || 0);
       });
+      object.averageValue = `${this.averageValue(updatedArray)} ${data.data[unitKey]}`;
+      object.currentValue = `${this.currentValue(updatedArray)} ${data.data[unitKey]}`;
       this.sensors.push(object);
+      // HUMIDITY
+      if (data.type === 'tempHumid') {
+        const humScale = 'humidity_scale';
+        const objectHum = {
+          key: `${data.data.id}-hum`,
+          name: `${data.data.name} - Humidity`,
+          sampleRate: this.$myStore.state.dataTypes[data.type].sample_rate,
+          average: null,
+          current: null,
+          labels: [],
+          datasets: [
+            {
+              backgroundColor: 'orange' || '#3a8ee6',
+              label: data.data[humScale] || 'Reading',
+              data: [],
+            },
+          ],
+        };
+        // eslint-disable-next-line
+        const { values } = this.$myStore.state.dataTypes[data.type];
+        // eslint-disable-next-line
+        const updatedArray = data.data['humidity_value'].slice(Math.max(data.data['humidity_value'].length - arrayLength, 0));
+        updatedArray.forEach(([time, reading]) => {
+          if (reading == null) return; // Skip any null values
+          const newTime = this.createDate(time);
+          objectHum.labels.push(newTime);
+          objectHum.datasets[0].data.push(reading || 0);
+        });
+        objectHum.averageValue = `${this.averageValue(updatedArray)} ${data.data[humScale]}`;
+        objectHum.currentValue = `${this.currentValue(updatedArray)} ${data.data[humScale]}`;
+        this.sensors.push(objectHum);
+      }
+    },
+    averageValue(array) {
+      let accum = 0;
+      let tot = 0;
+      // eslint-disable-next-line
+      for (let i = 0; i < array.length; i++) {
+        if (array[i][1] != null) {
+          accum += array[i][1];
+          tot += 1;
+        }
+      }
+      return (accum / tot).toFixed(2);
+    },
+    currentValue(array) {
+      if (array[array.length - 1][1] != null) {
+        return array[array.length - 1][1].toFixed(2);
+      }
+      return 'Sensor returned null value. Ensure sensor is placed securely in relevant location';      
     },
     createDate(dateString) {
       const d = new Date();

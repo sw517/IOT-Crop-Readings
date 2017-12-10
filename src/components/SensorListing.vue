@@ -87,17 +87,16 @@ export default {
           },
         ],
       };
+      // eslint-disable-next-line
       const { values } = this.$myStore.state.dataTypes[data.type];
       let arrayLength = 12;
       if (this.$myStore.state.dataTypes[data.type].sample_rate === '10minute') {
-        console.log('hour');
         arrayLength = 72;
       } else if (this.$myStore.state.dataTypes[data.type].sample_rate === 'minute') {
         arrayLength = 320;
       }
       // eslint-disable-next-line
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
-      console.log(updatedArray);
       updatedArray.forEach(([time, reading]) => {
         if (reading == null) return; // Skip any null values
         const newTime = this.createDate(time);
@@ -105,6 +104,35 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
+      // HUMIDITY
+      if (data.type === 'tempHumid') {
+        const humScale = 'humidity_scale';
+        const objectHum = {
+          key: `${data.data.id}-hum`,
+          name: `${data.data.name} - Humidity`,
+          sampleRate: this.$myStore.state.dataTypes[data.type].sample_rate,
+          labels: [],
+          datasets: [
+            {
+              backgroundColor: 'orange' || '#3a8ee6',
+              label: data.data[humScale] || 'Reading',
+              data: [],
+            },
+          ],
+        };
+        // eslint-disable-next-line
+        const { values } = this.$myStore.state.dataTypes[data.type];
+        arrayLength = 12;
+        // eslint-disable-next-line
+        const updatedArray = data.data['humidity_value'].slice(Math.max(data.data['humidity_value'].length - arrayLength, 0));
+        updatedArray.forEach(([time, reading]) => {
+          if (reading == null) return; // Skip any null values
+          const newTime = this.createDate(time);
+          objectHum.labels.push(newTime);
+          objectHum.datasets[0].data.push(reading || 0);
+        });
+        this.sensors.push(objectHum);
+      }
     },
     createDate(dateString) {
       const d = new Date();

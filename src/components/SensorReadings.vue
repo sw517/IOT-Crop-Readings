@@ -156,16 +156,47 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       this.sensors.push(object);
-      this.processData(object);
+      this.processData(object, false);
+      // HUMIDITY
+      if (data.type === 'tempHumid') {
+        const humScale = 'humidity_scale';
+        const objectHum = {
+          key: `${data.data.id}-hum`,
+          name: `${data.data.name} - Humidity`,
+          sampleRate: this.$myStore.state.dataTypes[data.type].sample_rate,
+          labels: [],
+          datasets: [
+            {
+              backgroundColor: 'orange' || '#3a8ee6',
+              label: data.data[humScale] || 'Reading',
+              data: [],
+            },
+          ],
+        };
+        // eslint-disable-next-line
+        const { values } = this.$myStore.state.dataTypes[data.type];
+        arrayLength = 12;
+        // eslint-disable-next-line
+        const updatedArray = data.data['humidity_value'].slice(Math.max(data.data['humidity_value'].length - arrayLength, 0));
+        updatedArray.forEach(([time, reading]) => {
+          if (reading == null) return; // Skip any null values
+          const newTime = this.createDate(time);
+          objectHum.labels.push(newTime);
+          objectHum.datasets[0].data.push(reading || 0);
+        });
+        this.sensors.push(objectHum);
+        this.processData(objectHum, true);
+      }
     },
     // Check sensor data against assignment brief specification.
     // e.g Lettuce must be between 7 and 29 degrees.
     // Values are assessed by 2 units more than their optimum condition.
     // e.g If optimum temperature is 8°C to 10°C, the range is increased to 6°C to 12°C
     // in order to avoid unnecessary warning notifications for 1°C out of bounds.
-    processData(object) {
+    processData(object, humidity) {
       // GH1 Cactus Temperature
-      if (object.key === 'gh1_plantzone_1_temp') {
+      if (object.key === 'gh1_plantzone_1_temp' && humidity === false) {
+        console.log(object.datasets[0].data);
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
           if (this.isWinter(object.labels[index]) && this.isNight(object.labels[index])) {
@@ -185,7 +216,7 @@ export default {
       } /* GH1 Cactus Light */ else if (object.key === 'gh1_plantzone_1_lux') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value < 800) {
+          if (value < 0.7) {
             const notification = `[${timeStamp}] Warning: ${object.name} was at ${value} lux`;
             const description = 'Cactae need more light';
             this.notifications.push({ index, notification, description });
@@ -195,9 +226,19 @@ export default {
       } /* GH1 Cactus Moisture */ else if (object.key === 'gh1_plantzone_1_moisture') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value > 0.3) {
+          if (value > 60) {
             const notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}% vwc`;
             const description = 'Cactae should be kept fairly dry';
+            this.notifications.push({ index, notification, description });
+            this.setStatus(object);
+          }
+        });
+      } /* GH1 Cactus Humidity */ else if (object.key === 'gh1_plantzone_1_temp') {
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value > 60) {
+            const notification = `[${timeStamp}] Warning: ${object.name} was at ${Math.round(value)}%`;
+            const description = 'Humidity for cactae should be below 40%';
             this.notifications.push({ index, notification, description });
             this.setStatus(object);
           }
@@ -242,7 +283,7 @@ export default {
       const timeSplit = time.split(':');
       const hour = timeSplit[0];
       let isNight = false;
-      if (hour > 16 || hour < 6) {
+      if (hour > 20 || hour < 6) {
         isNight = true;
       }
       return isNight;
@@ -405,7 +446,7 @@ a {
 }
 </style>
 <style>
-.el-card__body {
+.notification-card .el-card__body {
   max-height: 175px;
   overflow-y: auto;
 }

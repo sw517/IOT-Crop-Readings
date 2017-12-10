@@ -18,7 +18,7 @@ export default new Vuex.Store({
       gas: {
         unit: 'gas_scale',
         values: 'gas_values',
-        sample_rate: 'minute',
+        sample_rate: 'hour',
         graphColor: '#333',
       },
       hydrometer: {
