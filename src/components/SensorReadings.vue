@@ -4,7 +4,7 @@
       <!-- <h2>{{this.$route.params.location}}</h2> -->
       <el-card class="box-card notification-card">
         <div slot="header" class="clearfix">
-          <span>Notifications</span>
+          <span>Notifications [ last 12 hours ]</span>
         </div>
         <el-alert v-if="notifications.length == 0"
           title="No warnings found in Canterbury Gardens"
@@ -22,7 +22,7 @@
       </el-card>
       <el-row :gutter="20">
         <el-col class="graph-col" :span="4">
-          <div class="grid-content" style="box-sizing: border-box">
+          <div class="grid-content" style="box-sizing: border-box; text-align: left">
             <div style="font-weight: 700">Gardens' Status</div>
             <div class="legend">
               <div class="el-icon-info okay"></div>All data in optimal range
@@ -59,6 +59,19 @@
           </div>
         </el-col>
       </el-row>
+      <el-card class="box-card solarCard" style="width : 100%; text-align:left">
+        <div slot="header" class="clearfix">
+          <span>Solar Power</span>
+        </div>
+        <div>Total power calculated over last 24 hours: {{solarTotal}} watts</div>
+        <div v-if="solarTotal === 0">
+          <el-alert
+            title='This is likely caused by the sensor returning null values'
+            type='error'
+            show-icon>
+          </el-alert>
+        </div>
+      </el-card>
     </div>
     <div class="weather">
       <div class="weatherwidget">
@@ -105,6 +118,7 @@ export default {
       gh3Error: false,
       outsideError: false,
       houseError: false,
+      solarTotal: 0,
     };
   },
   methods: {
@@ -121,7 +135,10 @@ export default {
       return new Promise((resolve) => {
         // eslint-disable-next-line
         for (const sensor of sensors) {
-          const currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
+          let currentSampleRate = this.$myStore.state.dataTypes[sensor.type].sample_rate;
+          if (sensor.name === 'outside_shed_solar') {
+            currentSampleRate = 'minute';
+          }
           API.requestDevice({
             device_id: sensor.name,
             sample_rate: currentSampleRate,
@@ -154,6 +171,9 @@ export default {
         arrayLength = 72;
       } else if (this.$myStore.state.dataTypes[data.type].sample_rate === 'minute') {
         arrayLength = 320;
+      }
+      if (data.data.id === 'outside_shed_solar') {
+        arrayLength = 1140; // every minute in last 24 hours
       }
       // eslint-disable-next-line
       const updatedArray = data.data[values].slice(Math.max(data.data[values].length - arrayLength, 0));
@@ -307,11 +327,14 @@ export default {
           }
         });
       } /* Outdoor Muck Heap Temperature */ else if (object.key === 'outside_heap_temp' && humidity === false) {
+        let nullValues = 0;
+        let status = '';
+        let notification = '';
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value < 30 || value > 48) {
-            let status = 'warning';
-            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
+          if ((value < 30 || value > 48) && value != null) {
+            status = 'warning';
+            notification = `[${timeStamp}] Warning: ${object.name} was at ${value}°C`;
             if (value == null) {
               notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
               status = 'error';
@@ -320,7 +343,16 @@ export default {
             this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
+          if (value == null) nullValues += 1;
         });
+        if (nullValues > 10) {
+          notification = `Sensor Error: ${object.name} has returned multiple null values`;
+          const description = 'Sensor may have connection issues';
+          status = 'error';
+          const index = 'compost';
+          this.notifications.push({ index, notification, description, status });
+          this.setStatus(object, status);
+        }
       } /* Outdoor Muck Heap Humidity */ else if (object.key === 'outside_heap_temp-hum') {
         // console.log('work');
         object.datasets[0].data.forEach((value, index) => {
@@ -338,21 +370,58 @@ export default {
           }
         });
       } /* Outdoor Field Temperature */ else if (object.key === 'outside_field_temp') {
-        // console.log('work');
+        let status = '';
+        let notification = '';
+        let nullValues = 0;
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value < 20) {
-            let status = 'warning';
-            let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}%`;
-            if (value == null) {
-              notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
-              status = 'error';
-            }
+          if (value < 20 && value != null) {
+            status = 'warning';
+            notification = `[${timeStamp}] Warning: ${object.name} was at ${value}%`;
             const description = 'Temperature for outdoor crops should be kept cool below 20°C';
             this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
+          if (value == null) nullValues += 1;
         });
+        if (nullValues > 10) {
+          notification = `Sensor Error: ${object.name} has returned multiple null values`;
+          const description = 'Sensor may have connection issues';
+          status = 'error';
+          const index = 'rootcrops';
+          this.notifications.push({ index, notification, description, status });
+          this.setStatus(object, status);
+        }
+      } /* Solar Power */ else if (object.key === 'outside_shed_solar') {
+        let totalSolar = 0;
+        let nullValues = 0;
+        let status = '';
+        let notification = '';
+        let description = '';
+        object.datasets[0].data.forEach((value, index) => {
+          const timeStamp = this.createDate(object.labels[index]);
+          if (value != null) {
+            totalSolar += value;
+          }
+          if (value < 50 && value != null) {
+            status = 'warning';
+            notification = `[${timeStamp}] Warning: ${object.name} was at ${value} watts`;
+            description = 'Solar array may not have enough power for sensors';
+            this.notifications.push({ index, notification, description, status });
+            this.setStatus(object, status);
+          } else if (value == null) {
+            nullValues += 1;
+          }
+        });
+        if (nullValues > 10) {
+          notification = `Sensor Error: ${object.name} has returned multiple null values`;
+          description = 'Sensor may have connection issues';
+          status = 'error';
+          const index = 'solar';
+          this.notifications.push({ index, notification, description, status });
+          this.setStatus(object, status);
+        }
+        this.solarTotal = totalSolar;
       }
     },
     isNight(dateString) {
@@ -361,7 +430,7 @@ export default {
       const timeSplit = time.split(':');
       const hour = timeSplit[0];
       let isNight = false;
-      if (hour > 16 || hour < 6) {
+      if (hour > 16 || hour < 8) {
         isNight = true;
       }
       return isNight;
