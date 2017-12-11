@@ -15,10 +15,9 @@
           <el-alert
             :title='message.notification'
             :description='message.description'
-            type="warning"
+            :type='message.status'
             show-icon>
           </el-alert>
-          <!-- {{message.notification}} -->
         </div>
       </el-card>
       <el-row :gutter="20">
@@ -214,7 +213,7 @@ export default {
                 notification = `[${timeStamp}] Warning: ${object.name} is returning null value`;
                 status = 'error';
               }
-              this.notifications.push({ index, notification, description });
+              this.notifications.push({ index, notification, description, status });
               this.setStatus(object, status);
             }
           } else if (value < 5 || value > 31) {
@@ -225,7 +224,7 @@ export default {
               status = 'warning';
             }
             const description = 'Temperature for cactae should be between 7°C and 29°C during the day';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -240,7 +239,7 @@ export default {
               status = 'error';
             }
             const description = 'Cactae need more light';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -256,7 +255,7 @@ export default {
               status = 'error';
             }
             const description = 'Cactae should be kept fairly dry';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -271,7 +270,7 @@ export default {
               status = 'error';
             }
             const description = 'Humidity for cactae should be below 40%';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -286,7 +285,7 @@ export default {
               status = 'error';
             }
             const description = 'Temperature for lettuce should be between 7°C and 18°C';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -303,7 +302,7 @@ export default {
             }
             // const description = 'Temperature for seedlings should be between 10°C and 26°C';
             const description = 'Temperature for seedlings should be between 280K and 300K';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -318,7 +317,7 @@ export default {
               status = 'error';
             }
             const description = 'Temperature for compost heap should be around 40°C';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -334,7 +333,7 @@ export default {
               status = 'error';
             }
             const description = 'Humidity for compost heap should be high';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
@@ -350,7 +349,7 @@ export default {
               status = 'error';
             }
             const description = 'Temperature for outdoor crops should be kept cool below 20°C';
-            this.notifications.push({ index, notification, description });
+            this.notifications.push({ index, notification, description, status });
             this.setStatus(object, status);
           }
         });
