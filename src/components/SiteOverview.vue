@@ -117,7 +117,7 @@ export default {
         object.datasets[0].data.push(reading || 0);
       });
       object.averageValue = `${this.averageValue(updatedArray)} ${data.data[unitKey]}`;
-      object.currentValue = this.currentValue(updatedArray, unitKey);
+      object.currentValue = this.currentValue(updatedArray, data.data[unitKey]);
       this.sensors.push(object);
       // HUMIDITY
       if (data.type === 'tempHumid') {

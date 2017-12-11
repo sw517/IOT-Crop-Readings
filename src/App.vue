@@ -26,10 +26,8 @@
           <el-row>
             <el-menu
               :default-active="$route.path"
-              :router="true" 
-              background-color="#4a8c2a"
-              text-color="#fff"
-              active-text-color="#ffd04b"
+              :router="true"
+              active-text-color="#409eff"
             >						
               <el-menu-item index="/">
                 <i class="el-icon-menu"></i>
@@ -96,38 +94,17 @@ export default {
 }
 
 .el-header {
-  background-color: #4a8c2a;
+  /* background-color: #4a8c2a; */
   color: #fff;
-}
-.el-menu-item-group__title {
-  color: #fff;
-  font-size: 10px;
-  font-style: italic;
-}
-
-.el-submenu__title i,
-.el-menu-item i {
-  color: #fff;
+  background: #409eff; 
 }
 
 .el-menu {
   text-align: left;
-  color: #fff;
-  background: #545c64;
-}
-
-.el-submenu .el-menu-item {
-  font-size: 13px;
-  height: 40px;
-  line-height: 40px;
 }
 
 .el-row {
   margin-bottom: 20px;
-/* 
-  &:last-child {
-    margin-bottom: 0;
-  } */
 }
 
 .graph-col {

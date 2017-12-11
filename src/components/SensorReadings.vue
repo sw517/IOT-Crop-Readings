@@ -231,7 +231,7 @@ export default {
       } /* GH1 Cactus Light */ else if (object.key === 'gh1_plantzone_1_lux') {
         object.datasets[0].data.forEach((value, index) => {
           const timeStamp = this.createDate(object.labels[index]);
-          if (value < 0.7) {
+          if (value < 0.7 && !this.isNight(object.labels[index])) {
             let notification = `[${timeStamp}] Warning: ${object.name} was at ${value} lux`;
             let status = 'warning';
             if (value == null) {
@@ -340,7 +340,7 @@ export default {
       } /* Outdoor Field Temperature */ else if (object.key === 'outside_field_temp') {
         // console.log('work');
         object.datasets[0].data.forEach((value, index) => {
-          const timeStamp = object.labels[index];
+          const timeStamp = this.createDate(object.labels[index]);
           if (value < 20) {
             let status = 'warning';
             let notification = `[${timeStamp}] Warning: ${object.name} was at ${value}%`;
@@ -361,7 +361,7 @@ export default {
       const timeSplit = time.split(':');
       const hour = timeSplit[0];
       let isNight = false;
-      if (hour > 20 || hour < 6) {
+      if (hour > 16 || hour < 6) {
         isNight = true;
       }
       return isNight;
@@ -538,6 +538,9 @@ a {
 .el-icon-info.error,
 .el-icon-info.error.warning {
   color:red;
+}
+.legend {
+  text-align: left;
 }
 </style>
 <style>
